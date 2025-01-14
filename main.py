@@ -1,10 +1,11 @@
 import json
+import os
 from datetime import datetime, timedelta
 
 import matplotlib.pyplot as plt
 
-path = "result_klukva.json"
-days_per_period = 30
+path = "result.json"
+days_per_period = 10
 
 with open(path, 'r', encoding='utf-8') as file:
     data = json.load(file)
@@ -27,7 +28,7 @@ for message in messages:
 for user, count in message_count.items():
     print(f"{user}: {count} сообщений")
 
-print(f'необработано {not_message} сообщений ')
+print(f'не обработано {not_message} сообщений ')
 
 
 def parse_date(date_str):
@@ -47,6 +48,7 @@ period_counts = []
 
 current_period = []
 current_period_end = start_date + timedelta(days=days_per_period)
+unrecognized_voice_count = 0
 
 for message in messages_sorted:
     message_date = parse_date(message['date'])
@@ -60,7 +62,18 @@ for message in messages_sorted:
             try:
                 sender = msg['from']
                 period_count[sender]['messages'] += 1
-                period_count[sender]['words'] += count_words(msg['text'])
+                if msg.get("media_type") == "voice_message":
+                    # это голосовое сообщение
+                    voice_path = msg['file'].replace("voice_messages", "voice_messages_txt").replace(".ogg", ".txt")
+                    if os.path.isfile(voice_path):
+                        with open(voice_path, 'r', encoding='utf-8') as file:
+                            voice_content = file.read()
+                        period_count[sender]['words'] += count_words(voice_content)
+                    else:
+                        unrecognized_voice_count += 1
+                else:
+                    # это обычное сообщение
+                    period_count[sender]['words'] += count_words(msg['text'])
             except KeyError:
                 pass
 
@@ -68,6 +81,7 @@ for message in messages_sorted:
         current_period = [message]
         current_period_end = current_period_end + timedelta(days=days_per_period)
 
+print(f"проигнорировано {unrecognized_voice_count} голосовых")
 period_labels = [start_date + timedelta(days=days_per_period * i) for i in range(len(period_counts))]
 
 users = set()
