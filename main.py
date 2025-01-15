@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 
 path = "result.json"
-days_per_period = 10
+days_per_period = 30
 
 with open(path, 'r', encoding='utf-8') as file:
     data = json.load(file)

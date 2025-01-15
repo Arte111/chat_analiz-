@@ -1,4 +1,6 @@
+import gzip
 import os
+import shutil
 import subprocess
 
 import speech_recognition as sr
@@ -14,6 +16,16 @@ if not os.path.exists(output_folder):
 
 if not os.path.exists(text_folder):
     os.makedirs(text_folder)
+
+if not os.path.isfile("ffmpeg.exe"):
+    if not os.path.isfile("ffmpeg.exe.gz"):
+        print("ffmpeg not found")
+    else:
+        with gzip.open("ffmpeg.exe.gz", 'rb') as f_in:
+            with open("ffmpeg.exe", 'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        print("ffmpeg decompressed")
+
 
 
 def convert_ogg_to_wav(ogg_file, wav_file):
